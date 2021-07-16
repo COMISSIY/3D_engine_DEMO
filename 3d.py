@@ -1,14 +1,43 @@
 import pygame, math
 pygame.init()
 
-sc = pygame.display.set_mode((600, 400))
+sc = pygame.display.set_mode((1000, 700))
 clock = pygame.time.Clock()
 
-points = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0), (0, 0, 1), (1, 0, 1),	(1, 1, 1), (0, 1, 1)]
-pos = [[i[0]*100, i[1]*100, i[2]*100] for i in points]
-y_a = 0.01
-z_a = 0.01
-x_a = 0.01
+path = "/home/eugene/Документы/Programming/git/2551_open3dmodel/dante_naked/dante_naked.obj"
+size = 100
+
+m_pos = pygame.Vector3([sc.get_width()//2, sc.get_height()//2, 1000])
+
+y_a = 0.05
+z_a = 0.05
+x_a = 0.05
+
+def get_polygons(path):
+	polys = []
+	with open(path, 'r') as f:
+		for n, i in enumerate(f.read().split("\n")):
+			if i.split(" ")[0] == "f":
+				point = i.split(" ")[1:4]
+				
+				polygons = list(map(lambda x: int(x.split("/")[1]), point))
+				polys.append(polygons)
+	print(len(polys))
+	return polys
+
+def get_points(path):
+	points = []
+	with open(path, 'r') as f:
+		for i in f.read().split("\n"):
+			if i.split(" ")[0] == "v":
+				point = list(map(lambda x: float(x)*size, i.split(" ")[1:4]))
+				point[1] = m_pos[1] - point[1]
+				points.append(pygame.Vector3(point))
+	print(len(points))
+	return points
+
+pos = get_points(path)
+polys = get_polygons(path)
 
 def rotated_y(p, a):
 	x = p[0]*math.cos(a)+p[2]*math.sin(a)
@@ -38,10 +67,11 @@ while True:
 	[exit() for i in pygame.event.get() if i.type == pygame.QUIT]
 	clock.tick(30)
 	sc.fill((0, 0, 0))
-	for n, i in enumerate(pos, -1):
-		m_pos = (300, 200, 500)
-		pygame.draw.circle(sc, (255,255,255), return_2D_proection_z_obsyss(i, m_pos), 5)
-		pygame.draw.line(sc, (255, 0, 0), (return_2D_proection_z_obsyss(i, m_pos)), return_2D_proection_z_obsyss(pos[n], m_pos))
+	for n, i in enumerate(pos, 0):
+		func = return_2D_proection_z_obsyss
+		pygame.draw.circle(sc, (255,255,255), func(i, m_pos), 1)
+
+		# pygame.draw.line(sc, (255, 0, 0), return_2D_proection_z_obsyss(i, m_pos), return_2D_proection_z_obsyss(pos[n], m_pos))
 	keys = pygame.key.get_pressed()
 	if keys[pygame.K_y]:
 		for n, i in enumerate(pos):
@@ -52,5 +82,23 @@ while True:
 	if keys[pygame.K_z]:
 		for n, i in enumerate(pos):
 			pos[n] = rotated_z(i, z_a)
+	if keys[pygame.K_UP]:
+		for n, i in enumerate(pos):
+			pos[n] += pygame.Vector3((0, 10, 0))
+	if keys[pygame.K_DOWN]:
+		for n, i in enumerate(pos):
+			pos[n] += pygame.Vector3((0, -10, 0))
+	if keys[pygame.K_LEFT]:
+		for n, i in enumerate(pos):
+			pos[n] += pygame.Vector3((10, 0, 0))
+	if keys[pygame.K_RIGHT]:
+		for n, i in enumerate(pos):
+			pos[n] += pygame.Vector3((-10, 0, 0))
+	if keys[pygame.K_EQUALS]:
+		for n, i in enumerate(pos):
+			pos[n] += pygame.Vector3((0, 0, -10))
+	if keys[pygame.K_MINUS]:
+		for n, i in enumerate(pos):
+			pos[n] += pygame.Vector3((0, 0, 10))
 
 	pygame.display.update()
